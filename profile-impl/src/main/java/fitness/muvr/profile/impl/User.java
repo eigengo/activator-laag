@@ -25,9 +25,8 @@ public class User extends PersistentEntity<UserCommand, UserEvent, UserState> {
         b.setCommandHandler(UserCommand.Register.class, (cmd, ctx) ->
                 ctx.thenPersist(new UserEvent.Registered(cmd.password), evt -> ctx.reply(Done.getInstance()))
         );
-        b.setEventHandlerChangingBehavior(UserEvent.Registered.class, (evt) -> {
-                    return registeredBehavior(new UserState(evt.passwordHash, evt.passwordHashSalt));
-                }
+        b.setEventHandlerChangingBehavior(UserEvent.Registered.class, (evt) ->
+                registeredBehavior(new UserState(evt.passwordHash, evt.passwordHashSalt))
         );
         return b.build();
     }
