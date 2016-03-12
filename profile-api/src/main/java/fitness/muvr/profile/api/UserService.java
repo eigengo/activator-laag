@@ -1,6 +1,5 @@
 package fitness.muvr.profile.api;
 
-import akka.Done;
 import akka.NotUsed;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
