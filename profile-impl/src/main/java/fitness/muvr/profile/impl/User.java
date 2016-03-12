@@ -33,7 +33,7 @@ public class User extends PersistentEntity<UserCommand, UserEvent, UserState> {
 
     @Override
     public Behavior initialBehavior(Optional<UserState> snapshotState) {
-        return snapshotState.map(x -> registeredBehavior(x)).orElse(notRegisteredBehavior());
+        return snapshotState.map(this::registeredBehavior).orElse(notRegisteredBehavior());
     }
 
 }
