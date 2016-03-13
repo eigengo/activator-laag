@@ -4,17 +4,17 @@ import akka.Done;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntity;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public class User extends PersistentEntity<UserCommand, UserEvent, UserState> {
 
     private Behavior registeredBehavior(UserState userState) {
         BehaviorBuilder b = newBehaviorBuilder(userState);
         b.setReadOnlyCommandHandler(UserCommand.Login.class, (cmd, ctx) -> {
-            try {
-                ctx.reply(userState.login(cmd.password));
-            } catch (UserState.LoginFailedException e) {
-                ctx.commandFailed(e);
+            if (userState.passwordMatches(cmd.password)) {
+                ctx.reply(Optional.of(UUID.randomUUID().toString()));
             }
+            ctx.reply(Optional.empty());
         }
         );
         return b.build();

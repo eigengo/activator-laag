@@ -10,6 +10,8 @@ import com.lightbend.lagom.javadsl.api.transport.Method;
 
 import javax.annotation.concurrent.Immutable;
 
+import java.util.Optional;
+
 import static com.lightbend.lagom.javadsl.api.Service.named;
 import static com.lightbend.lagom.javadsl.api.Service.restCall;
 
@@ -41,7 +43,7 @@ public interface UserService extends Service {
         }
     }
 
-    ServiceCall<NotUsed, LoginMessage, String> login();
+    ServiceCall<NotUsed, LoginMessage, Optional<String>> login();
 
     ServiceCall<NotUsed, RegisterMessage, String> register();
 

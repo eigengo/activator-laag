@@ -9,12 +9,13 @@ import com.lightbend.lagom.serialization.CompressedJsonable;
 import com.lightbend.lagom.serialization.Jsonable;
 
 import javax.annotation.concurrent.Immutable;
+import java.util.Optional;
 
 public interface UserCommand extends Jsonable {
 
     @Immutable
     @JsonDeserialize
-    final class Login implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<String> {
+    final class Login implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<Optional<String>> {
         final String password;
 
         @JsonCreator

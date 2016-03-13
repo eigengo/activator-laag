@@ -2,11 +2,16 @@ package fitness.muvr.profile.impl;
 
 import akka.NotUsed;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
+import com.lightbend.lagom.javadsl.api.deser.ExceptionMessage;
+import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
+import com.lightbend.lagom.javadsl.api.transport.TransportException;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRef;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRegistry;
+import com.lightbend.lagom.javadsl.server.HeaderServiceCall;
 import fitness.muvr.profile.api.UserService;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 class UserServiceImpl implements UserService {
     private final PersistentEntityRegistry persistentEntityRegistry;
@@ -18,8 +23,8 @@ class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ServiceCall<NotUsed, LoginMessage, String> login() {
-        return (notUsed, request) -> {
+    public ServiceCall<NotUsed, LoginMessage, Optional<String>> login() {
+        return (unused, request) -> {
             // Look up the hello world entity for the given ID.
             PersistentEntityRef<UserCommand> ref = persistentEntityRegistry.refFor(User.class, request.username);
             // Ask the entity the Hello command.

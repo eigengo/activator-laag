@@ -17,10 +17,6 @@ import java.util.UUID;
 public final class UserState implements CompressedJsonable {
     static final UserState EMPTY = new UserState();
 
-    static class LoginFailedException extends Exception {
-
-    }
-
     static byte[] hashPassword(String passwordHashSalt, String password) {
         try {
             MessageDigest instance = MessageDigest.getInstance(MessageDigestAlgorithms.SHA_512);
@@ -49,11 +45,7 @@ public final class UserState implements CompressedJsonable {
      * @param password the password to check
      * @return true if passwords match
      */
-    String login(String password) throws LoginFailedException {
-        if (Arrays.equals(hashPassword(this.passwordHashSalt, password), this.passwordHash)) {
-            return UUID.randomUUID().toString();
-        } else {
-            throw new LoginFailedException();
-        }
+    boolean passwordMatches(String password) {
+        return Arrays.equals(hashPassword(this.passwordHashSalt, password), this.passwordHash);
     }
 }
