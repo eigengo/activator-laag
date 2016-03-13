@@ -1,6 +1,7 @@
 package fitness.muvr.profile.api;
 
 import akka.NotUsed;
+import akka.japi.Pair;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.lightbend.lagom.javadsl.api.Descriptor;
