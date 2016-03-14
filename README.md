@@ -33,26 +33,38 @@ it needs to be able to extract the identity of the actor from the incoming messa
 I shall begin by tackling the _user_ actor and the _user state_. 
 
 ```scala
+/// The public profile 
 case class PublicProfile(firstName: String, lastName: String)
 
+/// The state of the user entity
 case class UserState(
   passwordHash: Array[Byte], 
   passwordHashSalt: String, 
   publicProfile: PublicProfile = PublicProfile("", "")) 
 
+/// A command envelope that directs messages to a particular entity 
 case class CommandEnvelope(id: String, command: Any)
 
+/// The companion
 object User {
   
+  /// Available commands
   object commands {
+    /// Registere a user with the given password
     case class Register(password: String)
+    /// Login the user with the given password
     case class Login(password: String)
+    /// Set the user's public profile
     case class SetPublicProfile(publicProfile: PublicProfile)
+    /// Get the user's public profile
     case object GetPublicProfile
   }
   
+  /// The events
   object events {
+    /// The user has been registered
     case class Registered(passwordHash: Array[Byte], passwordHashSalt: String)
+    /// The public profile has been set
     case class PublicProfileSet(publicProfile: PublicProfile)
   }
   
@@ -69,20 +81,27 @@ object User {
 
 }
 
-class UserProfile extends PersistentActor with ActorLogging {
+/// User entity
+class User extends PersistentActor with ActorLogging {
+  import User._
 
+  /// the state
   private var state: UserState = _
 
+  /// persistence identity
   override def persistenceId: String = s"user-${self.path.name}"
 
+  /// recover behaviour
   override def receiveRecover: Receive = {
     case SnapshotOffer(_, offeredSnapshot: UserState) ⇒
       state = offeredSnapshot
       context.become(registered)
    }
 
+  /// initial behaviour
   override def receiveCommand: Receive = notRegistered
 
+  /// not-yet-registred behaviour
   private def notRegistered: Receive = {
     case r@commands.Register(password) ⇒
       val salt = UUID.randomUUID().toString()
@@ -95,6 +114,7 @@ class UserProfile extends PersistentActor with ActorLogging {
       context.become(registered)
   }
   
+  /// registered behaviour
   private def registered: Receive = {
     case commands.Login(password) ⇒
       // ...
