@@ -343,7 +343,7 @@ public interface UserCommand extends Jsonable {
 I have left out the pesky annotationses, constructorses, equalses, hashCodeses
 and other preciouses! Unlike the Scala code, the Lagom code adds the 
 ``PersistentEntity.ReplyType``, which marks the expected result of
-_ask_ing for a response. Consider the ``getPublicProfile()`` implementation again:
+_ask_-ing for a response. Consider the ``getPublicProfile()`` implementation again:
  
 ```java
 public ServiceCall<String, NotUsed, PublicProfile> getPublicProfile() {
