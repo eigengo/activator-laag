@@ -1,0 +1,42 @@
+2016-03-14 10:18:31,154 [ERROR] from user in profile-impl-application-akka.actor.default-dispatcher-2 - Exception in RestCallId{method=GET, pathPattern='/user/:id'}
+com.lightbend.lagom.javadsl.persistence.PersistentEntity$UnhandledCommandException: Unhandled command [fitness.muvr.profile.impl.UserCommand$GetPublicProfile] in [fitness.muvr.profile.impl.User] with id [foo]
+2016-03-14 10:23:13,332 [ERROR] from akka.actor.OneForOneStrategy in profile-impl-application-akka.actor.default-dispatcher-33 - No suitable constructor found for type [simple type, class fitness.muvr.profile.impl.UserEvent$Registered]: can not instantiate from JSON object (missing default constructor or creator, or perhaps need to add/enable type information?)
+ at [Source: [B@5e8acd55; line: 1, column: 2]
+com.fasterxml.jackson.databind.JsonMappingException: No suitable constructor found for type [simple type, class fitness.muvr.profile.impl.UserEvent$Registered]: can not instantiate from JSON object (missing default constructor or creator, or perhaps need to add/enable type information?)
+ at [Source: [B@5e8acd55; line: 1, column: 2]
+	at com.fasterxml.jackson.databind.JsonMappingException.from(JsonMappingException.java:216) ~[jackson-databind-2.7.2.jar:2.7.2]
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerBase.deserializeFromObjectUsingNonDefault(BeanDeserializerBase.java:1130) ~[jackson-databind-2.7.2.jar:2.7.2]
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserializeFromObject(BeanDeserializer.java:298) ~[jackson-databind-2.7.2.jar:2.7.2]
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:133) ~[jackson-databind-2.7.2.jar:2.7.2]
+	at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:3789) ~[jackson-databind-2.7.2.jar:2.7.2]
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:2872) ~[jackson-databind-2.7.2.jar:2.7.2]
+	at com.lightbend.lagom.internal.jackson.JacksonJsonSerializer.fromBinary(JacksonJsonSerializer.scala:134) ~[lagom-javadsl-jackson_2.11-1.0.0-M1.jar:1.0.0-M1]
+	at akka.serialization.Serialization$$anonfun$deserialize$2.apply(Serialization.scala:121) ~[akka-actor_2.11-2.4.2.jar:na]
+	at scala.util.Try$.apply(Try.scala:192) ~[scala-library-2.11.7.jar:na]
+	at akka.serialization.Serialization.deserialize(Serialization.scala:114) ~[akka-actor_2.11-2.4.2.jar:na]
+	at akka.persistence.cassandra.journal.CassandraJournal$.deserializeEvent(CassandraJournal.scala:570) ~[akka-persistence-cassandra_2.11-0.11.jar:0.11]
+	at akka.persistence.cassandra.query.EventsByPersistenceIdPublisher.extractEvent(EventsByPersistenceIdPublisher.scala:86) ~[akka-persistence-cassandra_2.11-0.11.jar:0.11]
+	at akka.persistence.cassandra.query.EventsByPersistenceIdPublisher.updateState(EventsByPersistenceIdPublisher.scala:76) ~[akka-persistence-cassandra_2.11-0.11.jar:0.11]
+	at akka.persistence.cassandra.query.EventsByPersistenceIdPublisher.updateState(EventsByPersistenceIdPublisher.scala:46) ~[akka-persistence-cassandra_2.11-0.11.jar:0.11]
+	at akka.persistence.cassandra.query.QueryActorPublisher.exhaustFetch(QueryActorPublisher.scala:213) ~[akka-persistence-cassandra_2.11-0.11.jar:0.11]
+	at akka.persistence.cassandra.query.QueryActorPublisher.akka$persistence$cassandra$query$QueryActorPublisher$$exhaustFetchAndBecome(QueryActorPublisher.scala:117) ~[akka-persistence-cassandra_2.11-0.11.jar:0.11]
+	at akka.persistence.cassandra.query.QueryActorPublisher$$anonfun$1.applyOrElse(QueryActorPublisher.scala:81) ~[akka-persistence-cassandra_2.11-0.11.jar:0.11]
+	at akka.actor.Actor$class.aroundReceive(Actor.scala:480) ~[akka-actor_2.11-2.4.2.jar:na]
+	at akka.persistence.cassandra.query.QueryActorPublisher.akka$stream$actor$ActorPublisher$$super$aroundReceive(QueryActorPublisher.scala:45) ~[akka-persistence-cassandra_2.11-0.11.jar:0.11]
+	at akka.stream.actor.ActorPublisher$class.aroundReceive(ActorPublisher.scala:309) ~[akka-stream_2.11-2.4.2.jar:na]
+	at akka.persistence.cassandra.query.QueryActorPublisher.aroundReceive(QueryActorPublisher.scala:45) ~[akka-persistence-cassandra_2.11-0.11.jar:0.11]
+	at akka.actor.ActorCell.receiveMessage(ActorCell.scala:526) ~[akka-actor_2.11-2.4.2.jar:na]
+	at akka.actor.ActorCell.invoke(ActorCell.scala:495) ~[akka-actor_2.11-2.4.2.jar:na]
+	at akka.dispatch.Mailbox.processMailbox(Mailbox.scala:257) ~[akka-actor_2.11-2.4.2.jar:na]
+	at akka.dispatch.Mailbox.run(Mailbox.scala:224) ~[akka-actor_2.11-2.4.2.jar:na]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) ~[na:1.8.0_40]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) ~[na:1.8.0_40]
+	at java.lang.Thread.run(Thread.java:745) ~[na:1.8.0_40]
+2016-03-14 10:23:13,332 [ERROR] from user in profile-impl-application-akka.actor.default-dispatcher-4 - Exception in RestCallId{method=GET, pathPattern='/user/:id'}
+com.lightbend.lagom.javadsl.persistence.PersistentEntity$UnhandledCommandException: Unhandled command [fitness.muvr.profile.impl.UserCommand$GetPublicProfile] in [fitness.muvr.profile.impl.User] with id [foo]
+2016-03-14 10:23:14,732 [ERROR] from user in profile-impl-application-akka.actor.default-dispatcher-33 - Exception in RestCallId{method=GET, pathPattern='/user/:id'}
+com.lightbend.lagom.javadsl.persistence.PersistentEntity$UnhandledCommandException: Unhandled command [fitness.muvr.profile.impl.UserCommand$GetPublicProfile] in [fitness.muvr.profile.impl.User] with id [foo]
+2016-03-14 10:23:15,341 [ERROR] from user in profile-impl-application-akka.actor.default-dispatcher-34 - Exception in RestCallId{method=GET, pathPattern='/user/:id'}
+com.lightbend.lagom.javadsl.persistence.PersistentEntity$UnhandledCommandException: Unhandled command [fitness.muvr.profile.impl.UserCommand$GetPublicProfile] in [fitness.muvr.profile.impl.User] with id [foo]
+2016-03-14 10:23:15,583 [ERROR] from user in profile-impl-application-akka.actor.default-dispatcher-15 - Exception in RestCallId{method=GET, pathPattern='/user/:id'}
+com.lightbend.lagom.javadsl.persistence.PersistentEntity$UnhandledCommandException: Unhandled command [fitness.muvr.profile.impl.UserCommand$GetPublicProfile] in [fitness.muvr.profile.impl.User] with id [foo]

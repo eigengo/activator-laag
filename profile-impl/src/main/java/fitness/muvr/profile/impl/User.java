@@ -8,11 +8,11 @@ import java.util.Optional;
 
 public class User extends PersistentEntity<UserCommand, UserEvent, UserState> {
 
-    private Behavior registeredBehavior(UserState userState) {
-        BehaviorBuilder b = newBehaviorBuilder(userState);
+    private Behavior registeredBehavior(final UserState initialState) {
+        BehaviorBuilder b = newBehaviorBuilder(initialState);
         b.setReadOnlyCommandHandler(UserCommand.Login.class, (cmd, ctx) -> {
             try {
-                ctx.reply(userState.login(cmd.password));
+                ctx.reply(state().login(cmd.password));
             } catch (UserState.LoginFailedException ex) {
                 ctx.commandFailed(ex);
             }
@@ -21,10 +21,10 @@ public class User extends PersistentEntity<UserCommand, UserEvent, UserState> {
             ctx.thenPersist(new UserEvent.PublicProfileSet(cmd.publicProfile), evt -> ctx.reply(Done.getInstance()))
         );
         b.setEventHandler(UserEvent.PublicProfileSet.class, (evt) ->
-            userState.withPublicProfile(evt.publicProfile)
+            state().withPublicProfile(evt.publicProfile)
         );
         b.setReadOnlyCommandHandler(UserCommand.GetPublicProfile.class, (cmd, ctx) ->
-            ctx.reply(userState.getPublicProfile())
+            ctx.reply(state().getPublicProfile())
         );
         return b.build();
     }

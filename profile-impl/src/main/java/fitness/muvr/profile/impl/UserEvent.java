@@ -8,8 +8,14 @@ import fitness.muvr.profile.api.UserService;
 import javax.annotation.concurrent.Immutable;
 import java.util.UUID;
 
+/**
+ * User events
+ */
 public interface UserEvent extends Jsonable {
 
+    /**
+     * User profile processed and set
+     */
     @Immutable
     @JsonDeserialize
     class PublicProfileSet implements UserEvent {
@@ -20,6 +26,9 @@ public interface UserEvent extends Jsonable {
         }
     }
 
+    /**
+     * Registered with hashed and salted password
+     */
     @Immutable
     @JsonDeserialize
     class Registered implements UserEvent {

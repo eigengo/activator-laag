@@ -17,8 +17,14 @@ import javax.annotation.concurrent.Immutable;
 import static com.lightbend.lagom.javadsl.api.Service.named;
 import static com.lightbend.lagom.javadsl.api.Service.restCall;
 
+/**
+ * API for the User entity
+ */
 public interface UserService extends Service {
 
+    /**
+     * The login message with {@link #username} and {@link #password}
+     */
     @Immutable
     @JsonDeserialize
     class LoginMessage {
@@ -32,6 +38,9 @@ public interface UserService extends Service {
         }
     }
 
+    /**
+     * Register message with desired {@link #username} and {@link #password}
+     */
     @Immutable
     @JsonDeserialize
     class RegisterMessage {
@@ -45,6 +54,9 @@ public interface UserService extends Service {
         }
     }
 
+    /**
+     * A public profile message (both set and get) with all publicly-available profile fields.
+     */
     @Immutable
     @JsonDeserialize
     @JsonSerialize
@@ -74,14 +86,34 @@ public interface UserService extends Service {
         }
     }
 
+    /**
+     * Login service call
+     * @return the service call
+     */
     ServiceCall<NotUsed, LoginMessage, String> login();
 
+    /**
+     * Register service call
+     * @return the service call
+     */
     ServiceCall<NotUsed, RegisterMessage, String> register();
 
+    /**
+     * Get public profile service call
+     * @return the service call
+     */
     ServiceCall<String, NotUsed, PublicProfile> getPublicProfile();
 
+    /**
+     * Set public profile service call
+     * @return the service call
+     */
     ServiceCall<String, PublicProfile, Done> setPublicProfile();
 
+    /**
+     * The service descriptor for the user service
+     * @return the descriptor
+     */
     @Override
     default Descriptor descriptor() {
         return named("user").with(

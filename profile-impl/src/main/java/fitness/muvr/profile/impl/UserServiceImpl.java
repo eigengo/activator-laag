@@ -9,6 +9,9 @@ import fitness.muvr.profile.api.UserService;
 
 import javax.inject.Inject;
 
+/**
+ * Implementation of the UserService; it is set up in {@link UserServiceModule}.
+ */
 class UserServiceImpl implements UserService {
     private final PersistentEntityRegistry persistentEntityRegistry;
 

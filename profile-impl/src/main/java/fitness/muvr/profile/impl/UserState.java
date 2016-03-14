@@ -16,17 +16,29 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * The state of the user entity
+ */
 @Immutable
 @JsonDeserialize
 public final class UserState implements CompressedJsonable {
+    /** Empty state */
     static final UserState EMPTY = new UserState();
 
+    /** Login failed */
     static class LoginFailedException extends TransportException {
         LoginFailedException() {
             super(TransportErrorCode.NotFound, "Not found");
         }
     }
 
+    /**
+     * Hashes the {{password}} with the tiven {{passwordHashSalt}}, returning the hash
+     *
+     * @param passwordHashSalt the hash salt
+     * @param password the clear-text password
+     * @return the digested password
+     */
     static byte[] hashPassword(String passwordHashSalt, String password) {
         try {
             MessageDigest instance = MessageDigest.getInstance(MessageDigestAlgorithms.SHA_512);
@@ -54,9 +66,10 @@ public final class UserState implements CompressedJsonable {
     }
 
     /**
-     * Indicates whether the given {{password}} matches the registered one
-     * @param password the password to check
-     * @return true if passwords match
+     * Checks the password, returning a valid login token.
+     * @param password the given password
+     * @return the login token
+     * @throws LoginFailedException if the passwords do not match
      */
     String login(String password) throws LoginFailedException {
         if (Arrays.equals(hashPassword(this.passwordHashSalt, password), this.passwordHash)) {
@@ -66,10 +79,19 @@ public final class UserState implements CompressedJsonable {
         }
     }
 
+    /**
+     * Gets the public profile
+     * @return the public profile
+     */
     UserService.PublicProfile getPublicProfile() {
         return this.publicProfile;
     }
 
+    /**
+     * Copies this instance, setting the {{publicProfile}}
+     * @param publicProfile the public profile to be set
+     * @return copy of this with {@link #publicProfile} set
+     */
     UserState withPublicProfile(UserService.PublicProfile publicProfile) {
         return new UserState(this.passwordHash, this.passwordHashSalt, publicProfile);
     }

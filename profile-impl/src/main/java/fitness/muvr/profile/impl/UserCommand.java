@@ -11,14 +11,23 @@ import fitness.muvr.profile.api.UserService;
 
 import javax.annotation.concurrent.Immutable;
 
+/**
+ * A common type for all commands that the user entity can handle
+ */
 public interface UserCommand extends Jsonable {
 
+    /**
+     * Get public profile
+     */
     @Immutable
     @JsonDeserialize
     final class GetPublicProfile implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<UserService.PublicProfile> {
 
     }
 
+    /**
+     * Set public profile
+     */
     @Immutable
     @JsonDeserialize
     final class SetPublicProfile implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<Done> {
@@ -43,6 +52,11 @@ public interface UserCommand extends Jsonable {
         }
     }
 
+    /**
+     * Login
+     */
+    @Immutable
+    @JsonDeserialize
     final class Login implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<String> {
         final String password;
 
@@ -65,6 +79,9 @@ public interface UserCommand extends Jsonable {
         }
     }
 
+    /**
+     * Register
+     */
     @Immutable
     @JsonDeserialize
     final class Register implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<Done>  {
