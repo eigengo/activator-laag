@@ -1,5 +1,6 @@
 package fitness.muvr.profile.api;
 
+import akka.Done;
 import akka.NotUsed;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -9,6 +10,7 @@ import com.lightbend.lagom.javadsl.api.Descriptor;
 import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.api.transport.Method;
+import scala.xml.dtd.EMPTY;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -47,15 +49,14 @@ public interface UserService extends Service {
     @JsonDeserialize
     @JsonSerialize
     class PublicProfile {
+        public static final PublicProfile EMPTY = new PublicProfile("", "");
         public final String firstName;
         public final String lastName;
-        public final int age;
 
         @JsonCreator
-        public PublicProfile(String firstName, String lastName, int age) {
+        public PublicProfile(String firstName, String lastName) {
             this.firstName = firstName;
             this.lastName = lastName;
-            this.age = age;
         }
 
         @Override
@@ -63,14 +64,13 @@ public interface UserService extends Service {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             PublicProfile that = (PublicProfile) o;
-            return age == that.age &&
-                    Objects.equal(firstName, that.firstName) &&
-                    Objects.equal(lastName, that.lastName);
+            return Objects.equal(firstName, that.firstName) &&
+                   Objects.equal(lastName, that.lastName);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(firstName, lastName, age);
+            return Objects.hashCode(firstName, lastName);
         }
     }
 
@@ -80,7 +80,7 @@ public interface UserService extends Service {
 
     ServiceCall<String, NotUsed, PublicProfile> getPublicProfile();
 
-    ServiceCall<String, PublicProfile, NotUsed> setPublicProfile();
+    ServiceCall<String, PublicProfile, Done> setPublicProfile();
 
     @Override
     default Descriptor descriptor() {

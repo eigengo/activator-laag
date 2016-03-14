@@ -38,16 +38,16 @@ public final class UserState implements CompressedJsonable {
 
     private final byte[] passwordHash;
     private final String passwordHashSalt;
-    private final Optional<UserService.PublicProfile> publicProfile;
+    private final UserService.PublicProfile publicProfile;
 
     private UserState() {
         this.passwordHash = null;
         this.passwordHashSalt = null;
-        this.publicProfile = Optional.empty();
+        this.publicProfile = UserService.PublicProfile.EMPTY;
     }
 
     @JsonCreator
-    public UserState(byte[] passwordHash, String passwordHashSalt, Optional<UserService.PublicProfile> publicProfile) {
+    public UserState(byte[] passwordHash, String passwordHashSalt, UserService.PublicProfile publicProfile) {
         this.passwordHash = passwordHash;
         this.passwordHashSalt = passwordHashSalt;
         this.publicProfile = publicProfile;
@@ -66,11 +66,11 @@ public final class UserState implements CompressedJsonable {
         }
     }
 
-    Optional<UserService.PublicProfile> getPublicProfile() {
+    UserService.PublicProfile getPublicProfile() {
         return this.publicProfile;
     }
 
     UserState withPublicProfile(UserService.PublicProfile publicProfile) {
-        return new UserState(this.passwordHash, this.passwordHashSalt, Optional.of(publicProfile));
+        return new UserState(this.passwordHash, this.passwordHashSalt, publicProfile);
     }
 }

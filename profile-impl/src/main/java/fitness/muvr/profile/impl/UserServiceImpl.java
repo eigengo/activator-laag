@@ -1,5 +1,6 @@
 package fitness.muvr.profile.impl;
 
+import akka.Done;
 import akka.NotUsed;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRef;
@@ -43,7 +44,7 @@ class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ServiceCall<String, PublicProfile, NotUsed> setPublicProfile() {
+    public ServiceCall<String, PublicProfile, Done> setPublicProfile() {
         return (id, request) -> {
             PersistentEntityRef<UserCommand> ref = persistentEntityRegistry.refFor(User.class, id);
             return ref.ask(new UserCommand.SetPublicProfile(request));
