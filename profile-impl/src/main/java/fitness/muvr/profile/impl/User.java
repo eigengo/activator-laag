@@ -1,6 +1,6 @@
 package fitness.muvr.profile.impl;
 
-import akka.Done;
+import akka.NotUsed;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntity;
 import fitness.muvr.profile.api.UserService;
 
@@ -18,7 +18,7 @@ public class User extends PersistentEntity<UserCommand, UserEvent, UserState> {
             }
         });
         b.setCommandHandler(UserCommand.SetPublicProfile.class, (cmd, ctx) ->
-            ctx.thenPersist(new UserEvent.PublicProfileSet(cmd.publicProfile), evt -> ctx.reply(Done.getInstance()))
+            ctx.thenPersist(new UserEvent.PublicProfileSet(cmd.publicProfile), evt -> ctx.reply(NotUsed.getInstance()))
         );
         b.setEventHandler(UserEvent.PublicProfileSet.class, (evt) ->
             state().withPublicProfile(evt.publicProfile)
@@ -32,7 +32,7 @@ public class User extends PersistentEntity<UserCommand, UserEvent, UserState> {
     private Behavior notRegisteredBehavior() {
         BehaviorBuilder b = newBehaviorBuilder(null);
         b.setCommandHandler(UserCommand.Register.class, (cmd, ctx) ->
-                ctx.thenPersist(new UserEvent.Registered(cmd.password), evt -> ctx.reply(Done.getInstance()))
+                ctx.thenPersist(new UserEvent.Registered(cmd.password), evt -> ctx.reply(NotUsed.getInstance()))
         );
         b.setEventHandlerChangingBehavior(UserEvent.Registered.class, (evt) ->
                 registeredBehavior(new UserState(evt.passwordHash, evt.passwordHashSalt, UserService.PublicProfile.EMPTY))

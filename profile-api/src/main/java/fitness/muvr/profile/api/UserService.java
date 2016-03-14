@@ -1,6 +1,5 @@
 package fitness.muvr.profile.api;
 
-import akka.Done;
 import akka.NotUsed;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -10,7 +9,6 @@ import com.lightbend.lagom.javadsl.api.Descriptor;
 import com.lightbend.lagom.javadsl.api.Service;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
 import com.lightbend.lagom.javadsl.api.transport.Method;
-import scala.xml.dtd.EMPTY;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -96,7 +94,7 @@ public interface UserService extends Service {
      * Register service call
      * @return the service call
      */
-    ServiceCall<NotUsed, RegisterMessage, String> register();
+    ServiceCall<NotUsed, RegisterMessage, NotUsed> register();
 
     /**
      * Get public profile service call
@@ -108,7 +106,7 @@ public interface UserService extends Service {
      * Set public profile service call
      * @return the service call
      */
-    ServiceCall<String, PublicProfile, Done> setPublicProfile();
+    ServiceCall<String, PublicProfile, NotUsed> setPublicProfile();
 
     /**
      * The service descriptor for the user service

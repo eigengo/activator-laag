@@ -1,0 +1,6 @@
+2016-03-14 17:48:14,864 [ERROR] from user in profile-impl-application-akka.actor.default-dispatcher-2 - Exception in RestCallId{method=POST, pathPattern='/user'}
+com.lightbend.lagom.javadsl.persistence.PersistentEntity$UnhandledCommandException: Unhandled command [fitness.muvr.profile.impl.UserCommand$Register] in [fitness.muvr.profile.impl.User] with id [xyz]
+2016-03-14 17:48:17,781 [ERROR] from user in profile-impl-application-akka.actor.default-dispatcher-2 - Exception in RestCallId{method=POST, pathPattern='/user'}
+com.lightbend.lagom.javadsl.persistence.PersistentEntity$UnhandledCommandException: Unhandled command [fitness.muvr.profile.impl.UserCommand$Register] in [fitness.muvr.profile.impl.User] with id [xyz]
+2016-03-14 17:48:26,175 [ERROR] from user in profile-impl-application-akka.actor.default-dispatcher-5 - Exception in RestCallId{method=POST, pathPattern='/user'}
+com.lightbend.lagom.javadsl.persistence.PersistentEntity$UnhandledCommandException: Unhandled command [fitness.muvr.profile.impl.UserCommand$Register] in [fitness.muvr.profile.impl.User] with id [xxyz]

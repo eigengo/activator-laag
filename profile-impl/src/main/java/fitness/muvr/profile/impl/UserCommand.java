@@ -1,6 +1,6 @@
 package fitness.muvr.profile.impl;
 
-import akka.Done;
+import akka.NotUsed;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Objects;
@@ -30,7 +30,7 @@ public interface UserCommand extends Jsonable {
      */
     @Immutable
     @JsonDeserialize
-    final class SetPublicProfile implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<Done> {
+    final class SetPublicProfile implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<NotUsed> {
         final UserService.PublicProfile publicProfile;
 
         @JsonCreator
@@ -84,7 +84,7 @@ public interface UserCommand extends Jsonable {
      */
     @Immutable
     @JsonDeserialize
-    final class Register implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<Done>  {
+    final class Register implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<NotUsed>  {
         final String password;
 
         @JsonCreator

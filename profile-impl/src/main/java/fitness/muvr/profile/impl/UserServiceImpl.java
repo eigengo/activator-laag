@@ -30,11 +30,11 @@ class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ServiceCall<NotUsed, RegisterMessage, String> register() {
+    public ServiceCall<NotUsed, RegisterMessage, NotUsed> register() {
         return (notUsed, request) -> {
             String id = request.username;
             PersistentEntityRef<UserCommand> ref = persistentEntityRegistry.refFor(User.class, id);
-            return ref.ask(new UserCommand.Register(request.password)).thenApply((x) -> id);
+            return ref.ask(new UserCommand.Register(request.password));
         };
     }
 
@@ -47,7 +47,7 @@ class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ServiceCall<String, PublicProfile, Done> setPublicProfile() {
+    public ServiceCall<String, PublicProfile, NotUsed> setPublicProfile() {
         return (id, request) -> {
             PersistentEntityRef<UserCommand> ref = persistentEntityRegistry.refFor(User.class, id);
             return ref.ask(new UserCommand.SetPublicProfile(request));

@@ -150,6 +150,161 @@ configured, typically in the ``application.conf`` file. Together with the right
 plugin (say using the excellent [Akka Persistence Cassandra](https://github.com/krasserm/akka-persistence-cassandra)).
 
 Phew! This is a lot of work. And there's no sign of REST API, never mind the
-required monitoring, service registry, ...! 
+required monitoring, service registry, ...! There are many other blog posts 
+that explore Akka clustering, Spray APIs, monitoring and service registry at 
+[Cake Solutions Blog](http://www.cakesolutions.net/teamblogs). 
 
 # Enter Lagom
+Though I could stick with Scala, I shall abandon the creature-comforts of Scala 
+for Java in this first Lagom example. The implementation will do everything that
+the Akka / Scala code above did, but with REST APIs, with monitoring, with
+service registry. (Though I will stop at the REST APIs in this post.)
+
+## The service
+Lagom uses the term service to mean exposed, discoverable functionality; in this
+particular case, it will be a REST API.
+
+```java
+public interface UserService extends Service {
+
+    /**
+     * The login message with {@link #username} and {@link #password}
+     */
+    @Immutable
+    @JsonDeserialize
+    class LoginMessage {
+        public final String password;
+        public final String username;
+        // @JsonCreator constructor
+        // equals & hashCode
+        // toString
+    }
+
+    /**
+     * Register message with desired {@link #username} and {@link #password}
+     */
+    @Immutable
+    @JsonDeserialize
+    class RegisterMessage {
+        public final String password;
+        public final String username;
+        // ...
+    }
+
+    /**
+     * A public profile message (both set and get) with all publicly-available profile fields.
+     */
+    @Immutable
+    @JsonDeserialize
+    @JsonSerialize
+    class PublicProfile {
+        public final String firstName;
+        public final String lastName;
+        // ...
+    }
+
+    /**
+     * Login service call
+     * @return the service call
+     */
+    ServiceCall<NotUsed, LoginMessage, String> login();
+
+    /**
+     * Register service call
+     * @return the service call
+     */
+    ServiceCall<NotUsed, RegisterMessage, String> register();
+
+    /**
+     * Get public profile service call
+     * @return the service call
+     */
+    ServiceCall<String, NotUsed, PublicProfile> getPublicProfile();
+
+    /**
+     * Set public profile service call
+     * @return the service call
+     */
+    ServiceCall<String, PublicProfile, Done> setPublicProfile();
+
+    /**
+     * The service descriptor for the user service
+     * @return the descriptor
+     */
+    @Override
+    default Descriptor descriptor() {
+        return named("user").with(
+                restCall(Method.PUT,  "/user", login()),
+                restCall(Method.POST, "/user", register()),
+                restCall(Method.POST, "/user/:id", setPublicProfile()),
+                restCall(Method.GET,  "/user/:id", getPublicProfile())
+        ).withAutoAcl(true);
+    }
+}
+```
+
+The ``UserService`` exposes four endpoints as REST calls. The endpoints
+allow a user to be registered, to login, to set and get his or her public 
+profile. The messages are serialized from JSON, hence the need for all
+the [Jackson](https://github.com/FasterXML/jackson) annotations.   
+Taking a closer look at the abstract service calls, one can see three
+type parameters: the identity, the request, and the response. The request
+and response types are clear; the values of the identity type identify
+the entity the service is going to be "talking" to.
+
+Crucially, the service interface defines the ``default Descriptor descriptor()`` 
+method, which—ehm—describes the service. Moving on swiftly, then!
+
+## Service implementation
+The ``UserServiceImpl`` provides the implementation of the ``UserService``: at
+startup, it needs to register the new ``User`` entity, and then it can implement
+the service calls by looking up the appropriate entity and asking it for a response.
+
+```java
+class UserServiceImpl implements UserService {
+    private final PersistentEntityRegistry persistentEntityRegistry;
+
+    @Inject
+    UserServiceImpl(PersistentEntityRegistry persistentEntityRegistry) {
+        this.persistentEntityRegistry = persistentEntityRegistry;
+        persistentEntityRegistry.register(User.class);
+    }
+
+    @Override
+    public ServiceCall<NotUsed, LoginMessage, String> login() {
+        return (unused, request) -> {
+            PersistentEntityRef<UserCommand> ref = 
+              persistentEntityRegistry.refFor(User.class, request.username);
+            return ref.ask(new UserCommand.Login(request.password));
+        };
+    }
+
+    @Override
+    public ServiceCall<NotUsed, RegisterMessage, String> register() {
+        return (notUsed, request) -> {
+            String id = request.username;
+            PersistentEntityRef<UserCommand> ref = 
+              persistentEntityRegistry.refFor(User.class, id);
+            return ref.ask(new UserCommand.Register(request.password));
+        };
+    }
+
+    @Override
+    public ServiceCall<String, NotUsed, PublicProfile> getPublicProfile() {
+        return (id, request) -> {
+            PersistentEntityRef<UserCommand> ref = 
+              persistentEntityRegistry.refFor(User.class, id);
+            return ref.ask(new UserCommand.GetPublicProfile());
+        };
+    }
+
+    @Override
+    public ServiceCall<String, PublicProfile, Done> setPublicProfile() {
+        return (id, request) -> {
+            PersistentEntityRef<UserCommand> ref = 
+              persistentEntityRegistry.refFor(User.class, id);
+            return ref.ask(new UserCommand.SetPublicProfile(request));
+        };
+    }
+}
+```
