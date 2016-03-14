@@ -2,7 +2,10 @@ package fitness.muvr.profile.impl;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.lightbend.lagom.javadsl.api.transport.TransportErrorCode;
+import com.lightbend.lagom.javadsl.api.transport.TransportException;
 import com.lightbend.lagom.serialization.CompressedJsonable;
+import fitness.muvr.profile.api.UserService;
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 
 import javax.annotation.concurrent.Immutable;
@@ -10,12 +13,19 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.UUID;
 
 @Immutable
 @JsonDeserialize
 public final class UserState implements CompressedJsonable {
     static final UserState EMPTY = new UserState();
+
+    static class LoginFailedException extends TransportException {
+        LoginFailedException() {
+            super(TransportErrorCode.NotFound, "Not found");
+        }
+    }
 
     static byte[] hashPassword(String passwordHashSalt, String password) {
         try {
@@ -28,16 +38,19 @@ public final class UserState implements CompressedJsonable {
 
     private final byte[] passwordHash;
     private final String passwordHashSalt;
+    private final Optional<UserService.PublicProfile> publicProfile;
 
     private UserState() {
         this.passwordHash = null;
         this.passwordHashSalt = null;
+        this.publicProfile = Optional.empty();
     }
 
     @JsonCreator
-    public UserState(byte[] passwordHash, String passwordHashSalt) {
+    public UserState(byte[] passwordHash, String passwordHashSalt, Optional<UserService.PublicProfile> publicProfile) {
         this.passwordHash = passwordHash;
         this.passwordHashSalt = passwordHashSalt;
+        this.publicProfile = publicProfile;
     }
 
     /**
@@ -45,7 +58,19 @@ public final class UserState implements CompressedJsonable {
      * @param password the password to check
      * @return true if passwords match
      */
-    boolean passwordMatches(String password) {
-        return Arrays.equals(hashPassword(this.passwordHashSalt, password), this.passwordHash);
+    String login(String password) throws LoginFailedException {
+        if (Arrays.equals(hashPassword(this.passwordHashSalt, password), this.passwordHash)) {
+            return UUID.randomUUID().toString();
+        } else {
+            throw new LoginFailedException();
+        }
+    }
+
+    Optional<UserService.PublicProfile> getPublicProfile() {
+        return this.publicProfile;
+    }
+
+    UserState withPublicProfile(UserService.PublicProfile publicProfile) {
+        return new UserState(this.passwordHash, this.passwordHashSalt, Optional.of(publicProfile));
     }
 }

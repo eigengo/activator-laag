@@ -7,15 +7,43 @@ import com.google.common.base.Objects;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntity;
 import com.lightbend.lagom.serialization.CompressedJsonable;
 import com.lightbend.lagom.serialization.Jsonable;
+import fitness.muvr.profile.api.UserService;
 
 import javax.annotation.concurrent.Immutable;
-import java.util.Optional;
 
 public interface UserCommand extends Jsonable {
 
     @Immutable
     @JsonDeserialize
-    final class Login implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<Optional<String>> {
+    final class GetPublicProfile implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<UserService.PublicProfile> {
+
+    }
+
+    @Immutable
+    @JsonDeserialize
+    final class SetPublicProfile implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<Done> {
+        final UserService.PublicProfile publicProfile;
+
+        @JsonCreator
+        public SetPublicProfile(UserService.PublicProfile publicProfile) {
+            this.publicProfile = publicProfile;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SetPublicProfile that = (SetPublicProfile) o;
+            return Objects.equal(publicProfile, that.publicProfile);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(publicProfile);
+        }
+    }
+
+    final class Login implements UserCommand, CompressedJsonable, PersistentEntity.ReplyType<String> {
         final String password;
 
         @JsonCreator
