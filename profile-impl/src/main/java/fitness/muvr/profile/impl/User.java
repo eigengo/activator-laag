@@ -30,7 +30,7 @@ public class User extends PersistentEntity<UserCommand, UserEvent, UserState> {
     }
 
     private Behavior notRegisteredBehavior() {
-        BehaviorBuilder b = newBehaviorBuilder(UserState.EMPTY);
+        BehaviorBuilder b = newBehaviorBuilder(null);
         b.setCommandHandler(UserCommand.Register.class, (cmd, ctx) ->
                 ctx.thenPersist(new UserEvent.Registered(cmd.password), evt -> ctx.reply(Done.getInstance()))
         );

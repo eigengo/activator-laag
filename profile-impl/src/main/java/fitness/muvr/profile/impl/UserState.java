@@ -21,8 +21,6 @@ import java.util.UUID;
 @Immutable
 @JsonDeserialize
 public final class UserState implements CompressedJsonable {
-    /** Empty state */
-    static final UserState EMPTY = new UserState();
 
     /** Login failed */
     static class LoginFailedException extends TransportException {
@@ -50,12 +48,6 @@ public final class UserState implements CompressedJsonable {
     private final byte[] passwordHash;
     private final String passwordHashSalt;
     private final UserService.PublicProfile publicProfile;
-
-    private UserState() {
-        this.passwordHash = null;
-        this.passwordHashSalt = null;
-        this.publicProfile = UserService.PublicProfile.EMPTY;
-    }
 
     @JsonCreator
     public UserState(byte[] passwordHash, String passwordHashSalt, UserService.PublicProfile publicProfile) {
