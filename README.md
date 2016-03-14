@@ -213,7 +213,7 @@ public interface UserService extends Service {
      * Register service call
      * @return the service call
      */
-    ServiceCall<NotUsed, RegisterMessage, String> register();
+    ServiceCall<NotUsed, RegisterMessage, NotUsed> register();
 
     /**
      * Get public profile service call
@@ -225,7 +225,7 @@ public interface UserService extends Service {
      * Set public profile service call
      * @return the service call
      */
-    ServiceCall<String, PublicProfile, Done> setPublicProfile();
+    ServiceCall<String, PublicProfile, NotUsed> setPublicProfile();
 
     /**
      * The service descriptor for the user service
@@ -280,7 +280,7 @@ class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ServiceCall<NotUsed, RegisterMessage, String> register() {
+    public ServiceCall<NotUsed, RegisterMessage, NotUsed> register() {
         return (notUsed, request) -> {
             String id = request.username;
             PersistentEntityRef<UserCommand> ref = 
@@ -299,7 +299,7 @@ class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ServiceCall<String, PublicProfile, Done> setPublicProfile() {
+    public ServiceCall<String, PublicProfile, NotUsed> setPublicProfile() {
         return (id, request) -> {
             PersistentEntityRef<UserCommand> ref = 
               persistentEntityRegistry.refFor(User.class, id);
@@ -308,3 +308,240 @@ class UserServiceImpl implements UserService {
     }
 }
 ```
+
+### The commands
+The commands for the user entity will "borrow" the ones from the Akka / Scala
+code above. Except they'll be translated to Java.
+
+```java
+public interface UserCommand extends Jsonable {
+
+    final class GetPublicProfile implements UserCommand, CompressedJsonable, 
+        PersistentEntity.ReplyType<UserService.PublicProfile> {
+
+    }
+
+    final class SetPublicProfile implements UserCommand, CompressedJsonable, 
+        PersistentEntity.ReplyType<NotUsed> {
+        final UserService.PublicProfile publicProfile;
+    }
+
+    final class Login implements UserCommand, CompressedJsonable, 
+        PersistentEntity.ReplyType<String> {
+        final String password;
+    }
+
+    final class Register implements UserCommand, CompressedJsonable, 
+        PersistentEntity.ReplyType<NotUsed>  {
+        final String password;
+    }
+
+}
+
+```
+
+I have left out the pesky annotationses, constructorses, equalses, hashCodeses
+and other preciouses! Unlike the Scala code, the Lagom code adds the 
+``PersistentEntity.ReplyType``, which marks the expected result of
+_ask_ing for a response. Consider the ``getPublicProfile()`` implementation again:
+ 
+```java
+public ServiceCall<String, NotUsed, PublicProfile> getPublicProfile() {
+    return (id, request) -> {
+        PersistentEntityRef<UserCommand> ref = 
+          persistentEntityRegistry.refFor(User.class, id);
+        return ref.ask(new UserCommand.GetPublicProfile());
+    };
+}
+```
+
+Here, ``ref.ask(new UserCommand.GetPublicProfile())`` means that the 
+response's type is ``PublicProfile``, which matches the response type
+of the service call. Happy days!
+ 
+Before I can implement the ``User`` entity and its state, I will translate 
+the Scala events to their Lagom / Java counterparts.
+
+```java
+public interface UserEvent extends Jsonable {
+
+    class PublicProfileSet implements UserEvent {
+        final UserService.PublicProfile publicProfile;
+        // ...
+    }
+
+    class Registered implements UserEvent {
+        final byte[] passwordHash;
+        final String passwordHashSalt;
+        // ...
+    }
+
+}
+```
+
+### The state
+The ``UserState`` is a mechanical translation of its Scala counterpart.
+
+```java
+@Immutable
+@JsonDeserialize
+public final class UserState implements CompressedJsonable {
+
+    /** Login failed */
+    static class LoginFailedException extends TransportException {
+        LoginFailedException() {
+            super(TransportErrorCode.NotFound, "Not found");
+        }
+    }
+
+    /**
+     * Hashes the {{password}} with the tiven {{passwordHashSalt}}, returning the hash
+     *
+     * @param passwordHashSalt the hash salt
+     * @param password the clear-text password
+     * @return the digested password
+     */
+    static byte[] hashPassword(String passwordHashSalt, String password) {
+        try {
+            MessageDigest instance = MessageDigest.getInstance(MessageDigestAlgorithms.SHA_512);
+            return instance.digest((passwordHashSalt + password).getBytes("UTF-8"));
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    private final byte[] passwordHash;
+    private final String passwordHashSalt;
+    private final UserService.PublicProfile publicProfile;
+
+    @JsonCreator
+    public UserState(byte[] passwordHash, String passwordHashSalt, UserService.PublicProfile publicProfile) {
+        this.passwordHash = passwordHash;
+        this.passwordHashSalt = passwordHashSalt;
+        this.publicProfile = publicProfile;
+    }
+
+    /**
+     * Checks the password, returning a valid login token.
+     * @param password the given password
+     * @return the login token
+     * @throws LoginFailedException if the passwords do not match
+     */
+    String login(String password) throws LoginFailedException {
+        if (Arrays.equals(hashPassword(this.passwordHashSalt, password), this.passwordHash)) {
+            return UUID.randomUUID().toString();
+        } else {
+            throw new LoginFailedException();
+        }
+    }
+
+    /**
+     * Gets the public profile
+     * @return the public profile
+     */
+    UserService.PublicProfile getPublicProfile() {
+        return this.publicProfile;
+    }
+
+    /**
+     * Copies this instance, setting the {{publicProfile}}
+     * @param publicProfile the public profile to be set
+     * @return copy of this with {@link #publicProfile} set
+     */
+    UserState withPublicProfile(UserService.PublicProfile publicProfile) {
+        return new UserState(this.passwordHash, this.passwordHashSalt, publicProfile);
+    }
+}
+```
+
+With this in place, I can implement the ``User`` entity. It will follow
+similar pattern to the ``PersistentActor`` in Akka and Scala. 
+
+### The entity
+
+In the entity, I define the two behaviours: ``registered()`` and 
+``notRegistered()``. The behaviour defines the way in which the entity
+reacts to the received commands and events. Notice that Lagom makes
+a distinction between a command and a read-only command; though events
+are handled in exactly the same way as Akka.
+
+So, there is the ``notRegistered()`` behaviour, which reacts to the
+``UserCommand.Register`` command by persisting the ``UserEvent.Registered``
+event with the hashed and salted password and switches behaviour to
+``registered()``.
+
+In ``registered()``, the entity reacts to the ``Login`` command (by replying
+with some token if the password matches), to the ``GetPublicProfile`` command
+(by replying with the state's public profile). Finally, it allows the 
+public profile to be set by reacting to the ``SetPublicProfile`` command,
+then in no-op validating it and generating the ``PublicProfileSet`` event,
+and handling it by updating the user state.
+
+```java
+public class User extends PersistentEntity<UserCommand, UserEvent, UserState> {
+
+    private Behavior registeredBehavior(final UserState initialState) {
+        BehaviorBuilder b = newBehaviorBuilder(initialState);
+        b.setReadOnlyCommandHandler(UserCommand.Login.class, (cmd, ctx) -> {
+            try {
+                ctx.reply(state().login(cmd.password));
+            } catch (UserState.LoginFailedException ex) {
+                ctx.commandFailed(ex);
+            }
+        });
+        b.setCommandHandler(UserCommand.SetPublicProfile.class, (cmd, ctx) ->
+            ctx.thenPersist(new UserEvent.PublicProfileSet(cmd.publicProfile), evt -> ctx.reply(NotUsed.getInstance()))
+        );
+        b.setEventHandler(UserEvent.PublicProfileSet.class, (evt) ->
+            state().withPublicProfile(evt.publicProfile)
+        );
+        b.setReadOnlyCommandHandler(UserCommand.GetPublicProfile.class, (cmd, ctx) ->
+            ctx.reply(state().getPublicProfile())
+        );
+        return b.build();
+    }
+
+    private Behavior notRegisteredBehavior() {
+        BehaviorBuilder b = newBehaviorBuilder(null);
+        b.setCommandHandler(UserCommand.Register.class, (cmd, ctx) ->
+            ctx.thenPersist(new UserEvent.Registered(cmd.password), evt -> ctx.reply(NotUsed.getInstance()))
+        );
+        b.setEventHandlerChangingBehavior(UserEvent.Registered.class, (evt) ->
+            registeredBehavior(new UserState(evt.passwordHash, evt.passwordHashSalt, UserService.PublicProfile.EMPTY))
+        );
+        return b.build();
+    }
+
+    @Override
+    public Behavior initialBehavior(Optional<UserState> snapshotState) {
+        return snapshotState.map(this::registeredBehavior).orElse(notRegisteredBehavior());
+    }
+
+}
+```
+
+# Configuring
+Now, to run the Akka cluster application, one would have to create an object
+with the ``main`` method. (The ``public static void main(String[] args)`` beast.) 
+In that method, the ``ActorSystem``, cluster, API would have to be started; the
+node would then have to join the cluster, ..., a whole lot of palaver. 
+
+In Lagom, all that is needed is to define a module, which defines service
+bindings, together with a dependency injection framework—not 
+[Spring Framework](https://projects.spring.io/spring-framework/), the _other_ one.
+
+```java
+public class UserServiceModule extends AbstractModule implements ServiceGuiceSupport {
+
+    @Override
+    protected void configure() {
+        bindServices(serviceBinding(UserService.class, UserServiceImpl.class));
+    }
+}
+```
+
+# Running & summary
+All that remains for this post is to run the service. To do so, one has
+to step out of the Java comfort zone and use [sbt](http://www.scala-sbt.org/). 
+(Muahahaha!) For today, run ``sbt runAll``, then explore the wonders at
+``localhost:8000`` and ``localhost:9000``.
